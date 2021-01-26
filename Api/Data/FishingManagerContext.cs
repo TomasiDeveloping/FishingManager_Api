@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Api.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Data
 {
@@ -6,6 +7,33 @@ namespace Api.Data
     {
         public FishingManagerContext(DbContextOptions<FishingManagerContext> options) : base(options)
         {
+        }
+
+        public DbSet<User> Users { get; set; }
+        public DbSet<FishingClub> FishingClubs { get; set; }
+        public DbSet<Licence> Licences { get; set; }
+        public DbSet<DataBaseLog> DataBaseLogs { get; set; }
+        public DbSet<Address> Addresses { get; set; }
+        public DbSet<Right> Rights { get; set; }
+        public DbSet<Statistic> Statistics { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Licence>()
+                .HasOne(c => c.User)
+                .WithMany(u => u.Licences);
+
+            modelBuilder.Entity<UserFishingClub>()
+                .HasKey(uc => new {uc.UserId, uc.FishingClubId});
+            modelBuilder.Entity<UserFishingClub>()
+                .HasOne(uc => uc.User)
+                .WithMany(u => u.UserFishingClubs)
+                .HasForeignKey(uc => uc.UserId);
+            modelBuilder.Entity<UserFishingClub>()
+                .HasOne(uc => uc.FishingClub)
+                .WithMany(c => c.UserFishingClubs)
+                .HasForeignKey(uc => uc.FishingClubId);
         }
     }
 }
