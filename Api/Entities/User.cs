@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace Api.Entities
@@ -13,9 +12,9 @@ namespace Api.Entities
         public string LastName { get; set; }
         public string Password { get; set; }
         public Address Address { get; set; }
-        public bool IsActive { get; set; }
+        public bool Active { get; set; }
+        public string PictureUrl { get; set; }
         public DateTime CreatedAt { get; set; }
         public ICollection<Licence> Licences { get; set; }
-        public ICollection<UserFishingClub> UserFishingClubs { get; set; }
     }
 }
