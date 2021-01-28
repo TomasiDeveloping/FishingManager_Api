@@ -8,6 +8,7 @@ namespace Api.Entities
         public int Id { get; set; }
         public string Name { get; set; }
         public Address Address { get; set; }
+        public int AddressId { get; set; }
         public DateTime CreatedAt { get; set; }
         [Column(TypeName="xml")]
         public string Rules { get; set; }

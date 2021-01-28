@@ -29,8 +29,10 @@ namespace Api
                 );
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IFishingClubRepository, FishingClubRepository>();
+            services.AddScoped<ILicenceRepository, LicenceRepository>();
             services.AddDbContext<FishingManagerContext>(options => 
                 options.UseSqlServer(Configuration.GetConnectionString("FishingManager")));
+            services.AddCors();
             services.AddControllers();
             services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo {Title = "FishingManger Api", Version = "v1"}); });
         }
@@ -45,6 +47,11 @@ namespace Api
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "FishingManagerApi v1"));
             }
 
+            app.UseCors(options => 
+                options.AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+            );
             app.UseHttpsRedirection();
 
             app.UseRouting();

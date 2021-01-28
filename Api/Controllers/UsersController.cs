@@ -18,7 +18,9 @@ namespace Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<UserDto>> Get(int id)
         {
-            return Ok(await _userRepository.GetUserByIdAsync(id));
+            var user = await _userRepository.GetUserByIdAsync(id);
+            if (user == null) return NotFound("Kein User gefunden");
+            return Ok(user);
         }
 
         [HttpGet("Licences/{userId}")]

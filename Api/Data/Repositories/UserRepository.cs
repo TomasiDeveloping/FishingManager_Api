@@ -24,11 +24,13 @@ namespace Api.Data.Repositories
                 .Include(u => u.Address)
                 .Include(u => u.Right)
                 .FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null) return null;
             return new UserDto
             {
                 UserId = user.Id,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
+                Email = user.Email,
                 Address = user.Address,
                 PictureUrl = user.PictureUrl,
                 RightName = user.Right.Name
@@ -46,6 +48,7 @@ namespace Api.Data.Repositories
             {
                 Paid = licence.Paid,
                 CreatorName = @$"{licence.Creator.FirstName} {licence.Creator.LastName}",
+                LicenceName = licence.LicenseName,
                 UserName = $@"{licence.User.FirstName} {licence.User.LastName}",
                 StartDate = licence.StartDate,
                 EndDate = licence.EndDate,

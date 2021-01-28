@@ -65,6 +65,7 @@ namespace Api.Data.Repositories
                 FirstName = u.FirstName,
                 LastName = u.LastName,
                 Address = u.Address,
+                Email = u.Email,
                 RightName = u.Right.Name,
                 PictureUrl = u.PictureUrl,
                 UserId = u.Id
@@ -85,6 +86,7 @@ namespace Api.Data.Repositories
                 StartDate = l.StartDate,
                 EndDate = l.EndDate,
                 Paid = l.Paid,
+                LicenceName = l.LicenseName,
                 LicenceId = l.Id
             }).ToList();
         }
@@ -124,7 +126,7 @@ namespace Api.Data.Repositories
                 .Include(i => i.User)
                 .Include(i => i.Creator)
                 .ToListAsync();
-
+        
             return infringements.Select(i => new InfringementDto
             {
                 InfringementId = i.Id,

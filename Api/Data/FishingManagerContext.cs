@@ -24,6 +24,34 @@ namespace Api.Data
             modelBuilder.Entity<Licence>()
                 .HasOne(c => c.User)
                 .WithMany(u => u.Licences);
+
+            modelBuilder.Entity<Infringement>()
+                .HasOne(i => i.Creator)
+                .WithMany()
+                .HasForeignKey(i => i.CreatorId)
+                .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<Infringement>()
+                .HasOne(i => i.User)
+                .WithMany()
+                .HasForeignKey(i => i.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+            
+            modelBuilder.Entity<Licence>()
+                .HasOne(l => l.Creator)
+                .WithMany()
+                .HasForeignKey(l => l.CreatorId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Statistic>()
+                .HasOne(s => s.User)
+                .WithMany()
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+            modelBuilder.Entity<Statistic>()
+                .HasOne(s => s.Licence)
+                .WithMany()
+                .HasForeignKey(s => s.LicenceId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }
