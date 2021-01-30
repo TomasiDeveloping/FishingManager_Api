@@ -20,40 +20,43 @@ namespace Api.Data.Repositories
         }
         public async Task<UserDto> GetUserByIdAsync(int userId)
         {
-            var user = await _context.Users
+            return await _context.Users
                 .Include(u => u.Address)
                 .Include(u => u.Right)
-                .FirstOrDefaultAsync(u => u.Id == userId);
-            if (user == null) return null;
-            return new UserDto
-            {
-                UserId = user.Id,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Email = user.Email,
-                Address = user.Address,
-                PictureUrl = user.PictureUrl,
-                RightName = user.Right.Name
-            };
+                .Select(u => new UserDto()
+                {
+                    UserId = u.Id,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Email = u.Email,
+                    RightName = u.Right.Name,
+                    PictureUrl = u.PictureUrl,
+                    Address = u.Address
+                })
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserId == userId);
         }
 
         public async Task<List<LicenceDto>> GetUserLicencesAsync(int userId)
         {
-            var licences = await _context.Licences
+            return await _context.Licences
                 .Include(l => l.User)
                 .Include(l => l.Creator)
                 .Where(l => l.User.Id == userId)
+                .Select(l => new LicenceDto()
+                {
+                    Paid = l.Paid,
+                    CreatorId = l.CreatorId,
+                    CreatorName = $"{l.Creator.FirstName} {l.Creator.LastName}",
+                    UserName = $"{l.User.FirstName} {l.User.LastName}",
+                    EndDate = l.EndDate,
+                    StartDate = l.StartDate,
+                    LicenceName = l.LicenseName,
+                    LicenceId = l.Id,
+                    UserId = l.UserId
+                })
+                .AsNoTracking()
                 .ToListAsync();
-            return licences.Select(licence => new LicenceDto
-            {
-                Paid = licence.Paid,
-                CreatorName = @$"{licence.Creator.FirstName} {licence.Creator.LastName}",
-                LicenceName = licence.LicenseName,
-                UserName = $@"{licence.User.FirstName} {licence.User.LastName}",
-                StartDate = licence.StartDate,
-                EndDate = licence.EndDate,
-                LicenceId = licence.Id
-            }).ToList();
         }
 
         public async Task<List<StatisticDto>> GetUserStatisticsAsync(int userId)
@@ -61,6 +64,7 @@ namespace Api.Data.Repositories
             var statistics = await _context.Statistics
                 .Include(s => s.User)
                 .Where(s => s.User.Id == userId)
+                .AsNoTracking()
                 .ToListAsync();
 
             var dtoList = new List<StatisticDto>();

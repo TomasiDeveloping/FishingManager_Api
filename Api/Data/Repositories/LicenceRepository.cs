@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using Api.Dtos;
@@ -19,20 +20,23 @@ namespace Api.Data.Repositories
         }
         public async Task<List<LicenceDto>> GetLicencesAsync()
         {
-            var licences = await _context.Licences
+            return await _context.Licences
                 .Include(l => l.User)
                 .Include(l => l.Creator)
+                .Select(l => new LicenceDto()
+                {
+                    LicenceId = l.Id,
+                    LicenceName = l.LicenseName,
+                    UserId = l.UserId,
+                    UserName = $"{l.User.FirstName} {l.User.LastName}",
+                    CreatorId = l.CreatorId,
+                    CreatorName = $"{l.Creator.FirstName} {l.Creator.LastName}",
+                    StartDate = l.StartDate,
+                    EndDate = l.EndDate,
+                    Paid = l.Paid
+                })
+                .AsNoTracking()
                 .ToListAsync();
-            return licences.Select(l => new LicenceDto()
-            {
-                LicenceId = l.Id,
-                LicenceName = l.LicenseName,
-                UserName = $@"{l.User.FirstName} {l.User.LastName}",
-                CreatorName = $@"{l.Creator.FirstName} {l.Creator.LastName}",
-                StartDate = l.StartDate,
-                EndDate = l.EndDate,
-                Paid = l.Paid
-            }).ToList();
         }
 
         public async Task<LicenceDto> GetLicenceByIdAsync(int licenceId)
@@ -44,22 +48,24 @@ namespace Api.Data.Repositories
                 {
                     LicenceId = l.Id,
                     LicenceName = l.LicenseName,
+                    UserId = l.UserId,
                     UserName = $@"{l.User.FirstName} {l.User.LastName}",
+                    CreatorId = l.CreatorId,
                     CreatorName = $@"{l.Creator.FirstName} {l.Creator.LastName}",
                     StartDate = l.StartDate,
                     EndDate = l.EndDate,
                     Paid = l.Paid
-                }).FirstOrDefaultAsync(l => l.LicenceId == licenceId);
+                })
+                .AsNoTracking()
+                .FirstOrDefaultAsync(l => l.LicenceId == licenceId);
         }
 
         public async Task<LicenceDto> InsertLicenceAsync(LicenceDto licenceDto)
         {
-            var user = await _context.Users.FindAsync(licenceDto.UserId);
-            var creator = await _context.Users.FindAsync(licenceDto.CreatorId);
             await _context.Licences.AddAsync(new Licence()
             {
-                User = user,
-                Creator = creator,
+                UserId = licenceDto.UserId,
+                CreatorId = licenceDto.CreatorId,
                 LicenseName = licenceDto.LicenceName,
                 StartDate = licenceDto.StartDate,
                 EndDate = licenceDto.EndDate,
@@ -72,11 +78,9 @@ namespace Api.Data.Repositories
 
         public async Task<LicenceDto> UpdateLicenceAsync(LicenceDto licenceDto)
         {
-            var user = await _context.Users.FindAsync(licenceDto.UserId);
-            var creator = await _context.Users.FindAsync(licenceDto.CreatorId);
             var licenceToUpdate = await _context.Licences.FindAsync(licenceDto.LicenceId);
-            licenceToUpdate.Creator = creator;
-            licenceToUpdate.User = user;
+            licenceToUpdate.CreatorId = licenceDto.CreatorId;
+            licenceToUpdate.UserId = licenceDto.UserId;
             licenceToUpdate.Paid = licenceDto.Paid;
             licenceToUpdate.StartDate = licenceDto.StartDate;
             licenceToUpdate.EndDate = licenceDto.EndDate;
@@ -102,7 +106,7 @@ namespace Api.Data.Repositories
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch (Exception e)
+            catch (DbException e)
             {
                 await _context.DataBaseLogs.AddAsync(new DataBaseLog()
                 {

@@ -18,10 +18,12 @@ namespace Api.Data.Repositories
         {
             _context = context;
         }
+
         public async Task<FishingClubDto> GetFishingClubAsync()
         {
             var club = await _context.FishingClubs
                 .Include(c => c.Address)
+                .AsNoTracking()
                 .FirstOrDefaultAsync();
 
             var rulesJson = new JObject();
@@ -55,46 +57,49 @@ namespace Api.Data.Repositories
 
         public async Task<List<UserDto>> GetUsersAsync()
         {
-            var users = await _context.Users
+            return await _context.Users
                 .Include(u => u.Address)
                 .Include(u => u.Right)
+                .Select(u => new UserDto()
+                {
+                    UserId = u.Id,
+                    FirstName = u.FirstName,
+                    Email = u.Email,
+                    LastName = u.LastName,
+                    PictureUrl = u.PictureUrl,
+                    RightName = u.Right.Name,
+                    Address = u.Address
+                })
+                .AsNoTracking()
                 .ToListAsync();
-
-            return users.Select(u => new UserDto
-            {
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                Address = u.Address,
-                Email = u.Email,
-                RightName = u.Right.Name,
-                PictureUrl = u.PictureUrl,
-                UserId = u.Id
-            }).ToList();
         }
 
         public async Task<List<LicenceDto>> GetLicensesAsync()
         {
-            var licences = await _context.Licences
+            return await _context.Licences
                 .Include(l => l.User)
                 .Include(l => l.Creator)
+                .Select(l => new LicenceDto()
+                {
+                    LicenceId = l.Id,
+                    CreatorId = l.CreatorId,
+                    CreatorName = $"{l.Creator.FirstName} {l.Creator.LastName}",
+                    UserId = l.UserId,
+                    UserName = $"{l.User.FirstName} {l.User.LastName}",
+                    LicenceName = l.LicenseName,
+                    StartDate = l.StartDate,
+                    EndDate = l.EndDate,
+                    Paid = l.Paid
+                })
+                .AsNoTracking()
                 .ToListAsync();
-
-            return licences.Select(l => new LicenceDto
-            {
-                UserName = $@"{l.User.FirstName} {l.User.LastName}",
-                CreatorName = $@"{l.Creator.FirstName} {l.Creator.LastName}",
-                StartDate = l.StartDate,
-                EndDate = l.EndDate,
-                Paid = l.Paid,
-                LicenceName = l.LicenseName,
-                LicenceId = l.Id
-            }).ToList();
         }
 
         public async Task<List<StatisticDto>> GetStatisticsAsync()
         {
             var statistics = await _context.Statistics
                 .Include(s => s.User)
+                .AsNoTracking()
                 .ToListAsync();
 
             var dtoList = new List<StatisticDto>();
@@ -108,6 +113,7 @@ namespace Api.Data.Repositories
                     xml.LoadXml(item.StatisticXml);
                     jsonStatistics = JObject.Parse(JsonConvert.SerializeXmlNode(xml));
                 }
+
                 dtoList.Add(new StatisticDto
                 {
                     Id = item.Id,
@@ -122,19 +128,19 @@ namespace Api.Data.Repositories
 
         public async Task<List<InfringementDto>> GetInfringementsAsync()
         {
-            var infringements = await _context.Infringements
+            return await _context.Infringements
                 .Include(i => i.User)
                 .Include(i => i.Creator)
+                .Select(i => new InfringementDto()
+                {
+                    InfringementId = i.Id,
+                    CreatorName = $"{i.Creator.FirstName} {i.Creator.LastName}",
+                    UserName = $"{i.User.FirstName} {i.User.LastName}",
+                    Description = i.Description,
+                    CreatedAt = i.CreatedAt
+                })
+                .AsNoTracking()
                 .ToListAsync();
-        
-            return infringements.Select(i => new InfringementDto
-            {
-                InfringementId = i.Id,
-                UserName = $@"{i.User.FirstName} {i.User.LastName}",
-                CreatorName = $@"{i.Creator.FirstName} {i.Creator.LastName}",
-                Description = i.Description,
-                CreatedAt = i.CreatedAt
-            }).ToList();
         }
     }
 }
