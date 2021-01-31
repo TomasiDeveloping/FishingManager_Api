@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
 using Api.Dtos;
+using Api.Entities;
+using Api.Helper;
 using Api.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -13,10 +16,12 @@ namespace Api.Data.Repositories
     public class UserRepository : IUserRepository
     {
         private readonly FishingManagerContext _context;
+        private readonly DatabaseLogger _logger;
 
-        public UserRepository(FishingManagerContext context)
+        public UserRepository(FishingManagerContext context, DatabaseLogger logger)
         {
             _context = context;
+            _logger = logger;
         }
         public async Task<UserDto> GetUserByIdAsync(int userId)
         {
@@ -29,6 +34,8 @@ namespace Api.Data.Repositories
                     FirstName = u.FirstName,
                     LastName = u.LastName,
                     Email = u.Email,
+                    RightId = u.RightId,
+                    Active = u.Active,
                     RightName = u.Right.Name,
                     PictureUrl = u.PictureUrl,
                     Address = u.Address
@@ -90,6 +97,82 @@ namespace Api.Data.Repositories
             }
 
             return dtoList;
+        }
+
+        public async Task<UserDto> InsertUserAsync(UserDto userDto)
+        {
+            await _context.AddAsync(new User()
+            {
+                FirstName = userDto.FirstName,
+                LastName = userDto.LastName,
+                Email = userDto.Email,
+                RightId = userDto.RightId,
+                PictureUrl = userDto.PictureUrl,
+                Active = userDto.Active,
+                CreatedAt = DateTime.Now,
+                Password = "Welcome",
+                Address = userDto.Address
+            });
+            var checkInsert = await Complete();
+            if (!checkInsert) return null;
+            _logger.InsertDatabaseLog(new DataBaseLog()
+            {
+                Type = "Neuer User",
+                Message = $"Neuer User {userDto.FirstName} {userDto.LastName} wurde hinzugefügt",
+                CreatedAt = DateTime.Now
+            });
+            return userDto;
+        }
+
+        public async Task<UserDto> UpdateUserAsync(UserDto userDto)
+        {
+            var userToUpdate = await _context.Users.FindAsync(userDto.UserId);
+            userToUpdate.FirstName = userDto.FirstName;
+            userToUpdate.LastName = userDto.LastName;
+            userToUpdate.Email = userDto.Email;
+            userToUpdate.PictureUrl = userDto.PictureUrl;
+            userToUpdate.Active = userDto.Active;
+            userToUpdate.RightId = userDto.RightId;
+
+            var checkUpdate = await Complete();
+
+            return checkUpdate ? userDto : null;
+        }
+
+        public async Task<bool> DeleteUserAsync(int userId)
+        {
+            var userToDelete = await _context.Users.FindAsync(userId);
+            if (userToDelete == null) return false;
+            _context.Users.Remove(userToDelete);
+
+            var checkDelete = await Complete();
+            if (!checkDelete) return false;
+            _logger.InsertDatabaseLog(new DataBaseLog()
+            {
+                Type = "User gelöscht",
+                Message = $"User mit der Id {userId} wurde gelöscht",
+                CreatedAt = DateTime.Now
+            });
+            return true;
+        }
+
+        public async Task<bool> Complete()
+        {
+            try
+            {
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logger.InsertDatabaseLog(new DataBaseLog()
+                {
+                    Type = "Error UserRepository",
+                    Message = e.InnerException?.Message,
+                    CreatedAt = DateTime.Now
+                });
+                return false;
+            }
         }
     }
 }

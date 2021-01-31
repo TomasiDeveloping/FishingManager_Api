@@ -1,5 +1,6 @@
 using Api.Data;
 using Api.Data.Repositories;
+using Api.Helper;
 using Api.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -27,9 +28,12 @@ namespace Api
                 .AddNewtonsoftJson(options =>
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
                 );
+            services.AddTransient<DatabaseLogger>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IFishingClubRepository, FishingClubRepository>();
             services.AddScoped<ILicenceRepository, LicenceRepository>();
+            services.AddScoped<IAddressRepository, AddressRepository>();
+            services.AddScoped<IStatisticRepository, StatisticRepository>();
             services.AddDbContext<FishingManagerContext>(options => 
                 options.UseSqlServer(Configuration.GetConnectionString("FishingManager")));
             services.AddCors();

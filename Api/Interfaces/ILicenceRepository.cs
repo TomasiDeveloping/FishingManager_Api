@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Api.Dtos;
+using Api.Entities;
 
 namespace Api.Interfaces
 {

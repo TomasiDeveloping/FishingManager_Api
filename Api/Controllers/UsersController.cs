@@ -34,5 +34,14 @@ namespace Api.Controllers
         {
             return Ok(await _userRepository.GetUserStatisticsAsync(userId));
         }
+
+        [HttpPost]
+        public async Task<ActionResult<UserDto>> Post(UserDto userDto)
+        {
+            if (userDto == null) return BadRequest("Kein User zum hinzufügen");
+            var newUser = await _userRepository.InsertUserAsync(userDto);
+            if (newUser == null) return BadRequest("User konnte nicht hinzugefügt werden");
+            return Ok(newUser);
+        }
     }
 }

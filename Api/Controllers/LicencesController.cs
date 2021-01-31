@@ -36,7 +36,7 @@ namespace Api.Controllers
         public async Task<ActionResult<LicenceDto>> Post(LicenceDto licenceDto)
         {
             if (licenceDto == null) return BadRequest("Keine Lizenz zum Einfügen");
-            if (licenceDto.UserId <= 0 || licenceDto.CreatorId <= 0) return BadRequest("User oder Creator Fehler");
+                if (licenceDto.UserId <= 0 || licenceDto.CreatorId <= 0) return BadRequest("User oder Creator Fehler");
 
             var newLicence = await _licenceRepository.InsertLicenceAsync(licenceDto);
             if (newLicence == null) return BadRequest("Lizenz konnte nicht hinzugefügt werden");

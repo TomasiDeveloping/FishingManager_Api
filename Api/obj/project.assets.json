@@ -5875,7 +5875,7 @@
   },
   "packageFolders": {
     "C:\\Users\\ptoma\\.nuget\\packages\\": {},
-    "C:\\Microsoft\\Xamarin\\NuGet\\": {}
+    "C:\\Microsoft\\Xamarin\\NuGet": {}
   },
   "project": {
     "version": "1.0.0",
@@ -5887,7 +5887,7 @@
       "outputPath": "D:\\Webseiten\\FishingManager\\Api\\Api\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
-        "C:\\Microsoft\\Xamarin\\NuGet\\"
+        "C:\\Microsoft\\Xamarin\\NuGet"
       ],
       "configFilePaths": [
         "C:\\Users\\ptoma\\AppData\\Roaming\\NuGet\\NuGet.Config",

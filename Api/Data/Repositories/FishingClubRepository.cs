@@ -67,6 +67,8 @@ namespace Api.Data.Repositories
                     Email = u.Email,
                     LastName = u.LastName,
                     PictureUrl = u.PictureUrl,
+                    RightId = u.RightId,
+                    Active = u.Active,
                     RightName = u.Right.Name,
                     Address = u.Address
                 })

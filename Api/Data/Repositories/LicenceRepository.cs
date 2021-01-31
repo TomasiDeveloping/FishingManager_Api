@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 using Api.Dtos;
 using Api.Entities;
+using Api.Helper;
 using Api.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,10 +13,12 @@ namespace Api.Data.Repositories
     public class LicenceRepository : ILicenceRepository
     {
         private readonly FishingManagerContext _context;
+        private readonly DatabaseLogger _logger;
 
-        public LicenceRepository(FishingManagerContext context)
+        public LicenceRepository(FishingManagerContext context, DatabaseLogger logger)
         {
             _context = context;
+            _logger = logger;
         }
         public async Task<List<LicenceDto>> GetLicencesAsync()
         {
@@ -73,7 +75,16 @@ namespace Api.Data.Repositories
             });
             var checkInsert = await Complete();
 
-            return checkInsert ? licenceDto : null;
+            if (!checkInsert) return null;
+            
+            _logger.InsertDatabaseLog(new DataBaseLog()
+            {
+                Type = "Neue Lizenz",
+                Message = $"Neue Lizenz {licenceDto.LicenceName} wurde hinzugefügt durch {licenceDto.CreatorName}",
+                CreatedAt = DateTime.Now
+            });
+            return licenceDto;
+
         }
 
         public async Task<LicenceDto> UpdateLicenceAsync(LicenceDto licenceDto)
@@ -96,7 +107,15 @@ namespace Api.Data.Repositories
             var licenceToDelete = await _context.Licences.FindAsync(licenceId);
             if (licenceToDelete == null) return false;
             _context.Remove(licenceToDelete);
-            return await Complete();
+            var checkDelete = await Complete();
+            if (!checkDelete) return false;
+            _logger.InsertDatabaseLog(new DataBaseLog()
+            {
+                Type = "Lizenz gelöscht",
+                Message = $"Lizenz mit der Id {licenceId} wurde gelöscht",
+                CreatedAt = DateTime.Now
+            });
+            return true;
         }
 
         public async Task<bool> Complete()
@@ -106,15 +125,14 @@ namespace Api.Data.Repositories
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch (DbException e)
+            catch (Exception e)
             {
-                await _context.DataBaseLogs.AddAsync(new DataBaseLog()
+                _logger.InsertDatabaseLog(new DataBaseLog()
                 {
-                    Type = "Error",
-                    Message = e.Message,
+                    Type = "Error LicenceRepository",
+                    Message = e.InnerException?.Message,
                     CreatedAt = DateTime.Now
                 });
-                await _context.SaveChangesAsync();
                 return false;
             }
         }

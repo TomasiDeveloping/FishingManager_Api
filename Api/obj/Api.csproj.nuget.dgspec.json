@@ -14,7 +14,7 @@
         "outputPath": "D:\\Webseiten\\FishingManager\\Api\\Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Microsoft\\Xamarin\\NuGet\\"
+          "C:\\Microsoft\\Xamarin\\NuGet"
         ],
         "configFilePaths": [
           "C:\\Users\\ptoma\\AppData\\Roaming\\NuGet\\NuGet.Config",
