@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Api.Dtos;
 using Api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -14,15 +13,7 @@ namespace Api.Controllers
         {
             _statisticRepository = statisticRepository;
         }
-
-        [HttpGet]
-        public async Task<ActionResult<List<StatisticDto>>> Get()
-        {
-            var statistics = await _statisticRepository.GetStatisticsAsync();
-            if (statistics.Count == 0) return NoContent();
-            return Ok(statistics);
-        }
-
+        
         [HttpGet("{id}")]
         public async Task<ActionResult<StatisticDto>> Get(int id)
         {
@@ -47,7 +38,7 @@ namespace Api.Controllers
             var statistic = await _statisticRepository.GetStatisticByIdAsync(id);
             if (statistic == null) return BadRequest("Statistik zum Updaten nicht vorhanden");
             var checkUpdate = await _statisticRepository.UpdateStatisticAsync(statisticDto);
-
+        
             if (checkUpdate == null) return BadRequest("Fehler: Statistik konnte nicht geupdatet werden");
             return Ok(checkUpdate);
         }

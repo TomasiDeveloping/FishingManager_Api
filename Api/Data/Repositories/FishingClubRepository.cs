@@ -103,28 +103,70 @@ namespace Api.Data.Repositories
                 .Include(s => s.User)
                 .AsNoTracking()
                 .ToListAsync();
-
+        
             var dtoList = new List<StatisticDto>();
-
             foreach (var item in statistics)
             {
-                var jsonStatistics = new JObject();
-                if (!string.IsNullOrEmpty(item.StatisticXml))
-                {
-                    var xml = new XmlDocument();
-                    xml.LoadXml(item.StatisticXml);
-                    jsonStatistics = JObject.Parse(JsonConvert.SerializeXmlNode(xml));
-                }
+                var dto = new StatisticDto();
+                var xml = new XmlDocument();
+                xml.LoadXml(item.StatisticXml);
 
-                dtoList.Add(new StatisticDto
+                dto.Id = item.Id;
+                dto.Year = item.Year;
+                dto.FullName = $"{item.User.FirstName} {item.User.LastName}";
+                dto.UserId = item.UserId;
+                dto.LicenceName = item.Licence.LicenseName;
+                var statistic = new CatchStatistic
                 {
-                    Id = item.Id,
-                    Year = item.Year,
-                    FullName = $@"{item.User.FirstName} {item.User.LastName}",
-                    Statistic = jsonStatistics
-                });
+                    FishingClub = xml.SelectSingleNode("Statistik/Fischerverein")?.InnerText,
+                    Year = xml.SelectSingleNode("Statistik/Jahr")?.InnerText,
+                    FirstName = xml.SelectSingleNode("Statistik/Vorname")?.InnerText,
+                    LastName = xml.SelectSingleNode("Statistik/Nachname")?.InnerText,
+                    Months = new List<Months>()
+                };
+
+                var months = xml.SelectNodes("Statistik/Monate");
+                if (months != null)
+                    foreach (XmlNode month in months)
+                    {
+                        if (month.HasChildNodes == false) continue;
+                        var newMonth = new Months
+                        {
+                            Month = month.SelectSingleNode("Monat")?.InnerText, Days = new List<Days>()
+                        };
+                        statistic.Months.Add(newMonth);
+
+                        var days = month.SelectNodes("Tage");
+                        if (days == null) continue;
+                        foreach (XmlNode day in days)
+                        {
+                            if (day.HasChildNodes == false) continue;
+                            var newTag = new Days
+                            {
+                                Day = day.SelectSingleNode("Tag")?.InnerText,
+                                Hour = day.SelectSingleNode("Stunden")?.InnerText,
+                                FishCatches = new List<FishCatch>()
+                            };
+                            newMonth.Days.Add(newTag);
+
+                            var fishCatches = day.SelectNodes("Fang");
+                            if (fishCatches == null) continue;
+                            foreach (XmlNode fishCatch in fishCatches)
+                            {
+                                if (fishCatch.HasChildNodes == false) continue;
+                                var newFang = new FishCatch
+                                {
+                                    Number = fishCatch.SelectSingleNode("Anzahl")?.InnerText,
+                                    Fish = fishCatch.SelectSingleNode("Fisch")?.InnerText
+                                };
+                                newTag.FishCatches.Add(newFang);
+                            }
+                        }
+                    }
+
+                dto.Statistic = statistic;
+                dtoList.Add(dto);
             }
-
             return dtoList;
         }
 

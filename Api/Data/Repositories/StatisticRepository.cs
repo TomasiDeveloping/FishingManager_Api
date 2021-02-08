@@ -9,7 +9,6 @@ using Api.Helper;
 using Api.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Api.Data.Repositories
 {
@@ -23,39 +22,6 @@ namespace Api.Data.Repositories
             _context = context;
             _logger = logger;
         }
-        public async Task<List<StatisticDto>> GetStatisticsAsync()
-        {
-            var statistics =  await _context.Statistics
-                .AsNoTracking()
-                .Select(s => new 
-                {
-                    s.Id,
-                    s.Year,
-                    s.UserId,
-                    s.LicenceId,
-                    FullName = $"{s.User.FirstName} {s.User.LastName}",
-                    Statistic = s.StatisticXml
-                })
-                .ToListAsync();
-            var dtoList = new List<StatisticDto>();
-            foreach (var item in statistics)
-            {
-                var xml = new XmlDocument();
-                xml.LoadXml(item.Statistic);
-                var jsonStatistic = JsonConvert.SerializeXmlNode(xml);
-                dtoList.Add(new StatisticDto()
-                {
-                    Id = item.Id,
-                    Year = item.Year,
-                    FullName = item.FullName,
-                    UserId = item.UserId,
-                    LicenceId = item.LicenceId,
-                    Statistic = JObject.Parse(jsonStatistic)
-                });
-            }
-
-            return dtoList;
-        }
 
         public async Task<StatisticDto> GetStatisticByIdAsync(int statisticId)
         {
@@ -63,23 +29,67 @@ namespace Api.Data.Repositories
                 .Include(s => s.User)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(s => s.Id == statisticId);
-            if (statistic == null) return null;
-            var jsonStatistics = new JObject();
-            if (!string.IsNullOrEmpty(statistic.StatisticXml))
-            {
-                var xml = new XmlDocument();
-                xml.LoadXml(statistic.StatisticXml);
-                jsonStatistics = JObject.Parse(JsonConvert.SerializeXmlNode(xml));
-            }
 
-            return new StatisticDto()
+            if (statistic == null) return null;
+            var xml = new XmlDocument();
+            xml.LoadXml(statistic.StatisticXml);
+
+            var newStatistic = new CatchStatistic
+            {
+                FishingClub = xml.SelectSingleNode("Statistik/Fischerverein")?.InnerText,
+                Year = xml.SelectSingleNode("Statistik/Jahr")?.InnerText,
+                FirstName = xml.SelectSingleNode("Statistik/Vorname")?.InnerText,
+                LastName = xml.SelectSingleNode("Statistik/Nachname")?.InnerText,
+                Months = new List<Months>()
+            };
+
+            var months = xml.SelectNodes("Statistik/Monate");
+            if (months != null)
+                foreach (XmlNode month in months)
+                {
+                    if (month.HasChildNodes == false) continue;
+                    var newMonth = new Months
+                    {
+                        Month = month.SelectSingleNode("Monat")?.InnerText, Days = new List<Days>()
+                    };
+                    newStatistic.Months.Add(newMonth);
+
+                    var days = month.SelectNodes("Tage");
+                    if (days == null) continue;
+                    foreach (XmlNode day in days)
+                    {
+                        if (day.HasChildNodes == false) continue;
+                        var newTag = new Days
+                        {
+                            Day = day.SelectSingleNode("Tag")?.InnerText,
+                            Hour = day.SelectSingleNode("Stunden")?.InnerText,
+                            FishCatches = new List<FishCatch>()
+                        };
+                        newMonth.Days.Add(newTag);
+
+                        var fishCatches = day.SelectNodes("Fang");
+                        if (fishCatches == null) continue;
+                        foreach (XmlNode fishCatch in fishCatches)
+                        {
+                            if (fishCatch.HasChildNodes == false) continue;
+                            var newFang = new FishCatch
+                            {
+                                Number = fishCatch.SelectSingleNode("Anzahl")?.InnerText,
+                                Fish = fishCatch.SelectSingleNode("Fisch")?.InnerText
+                            };
+                            newTag.FishCatches.Add(newFang);
+                        }
+                    }
+                }
+
+            return new StatisticDto
             {
                 Id = statistic.Id,
                 Year = statistic.Year,
                 FullName = $"{statistic.User.FirstName} {statistic.User.LastName}",
                 LicenceId = statistic.LicenceId,
                 UserId = statistic.UserId,
-                Statistic = jsonStatistics
+                Statistic = newStatistic
             };
         }
 
@@ -94,30 +104,31 @@ namespace Api.Data.Repositories
                 })
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserId == statisticDto.UserId);
-            
+
             if (user == null) return null;
-            
+
             var xml = new XmlDocument();
             xml.Load(@"Helper\Statistic.xml");
-            
-            var nodeFirstName = xml.SelectSingleNode("Statistik/Inhaber/Vorname");
-            var nodeLastName = xml.SelectSingleNode("Statistik/Inhaber/Nachname");
-            var nodeYear = xml.SelectSingleNode("Statistik/Fangstatistik/Jahr/Datum");
+
+            var nodeFirstName = xml.SelectSingleNode("Statistik/Vorname");
+            var nodeLastName = xml.SelectSingleNode("Statistik/Nachname");
+            var nodeYear = xml.SelectSingleNode("Statistik/Jahr");
 
             if (nodeFirstName == null || nodeLastName == null || nodeYear == null)
             {
-                _logger.InsertDatabaseLog(new DataBaseLog()
+                _logger.InsertDatabaseLog(new DataBaseLog
                 {
                     Type = "XML Error StatisticRepository",
                     Message = "Fehler beim Zugriff auf XML Node"
                 });
                 return null;
             }
+
             nodeFirstName.InnerText = user.FirstName;
             nodeLastName.InnerText = user.LastName;
             nodeYear.InnerText = DateTime.Now.Year.ToString();
 
-            await _context.Statistics.AddAsync(new Statistic()
+            await _context.Statistics.AddAsync(new Statistic
             {
                 LicenceId = statisticDto.LicenceId,
                 UserId = statisticDto.UserId,
@@ -147,7 +158,7 @@ namespace Api.Data.Repositories
             _context.Remove(statisticToDelete);
             var checkDelete = await Complete();
             if (!checkDelete) return false;
-            _logger.InsertDatabaseLog(new DataBaseLog()
+            _logger.InsertDatabaseLog(new DataBaseLog
             {
                 Type = "Statistic gelöscht",
                 Message = $"Statistic {statisticToDelete} wurde gelöscht",
@@ -165,7 +176,7 @@ namespace Api.Data.Repositories
             }
             catch (Exception e)
             {
-                _logger.InsertDatabaseLog(new DataBaseLog()
+                _logger.InsertDatabaseLog(new DataBaseLog
                 {
                     Type = "Error StatisticRepository",
                     Message = e.InnerException?.Message,

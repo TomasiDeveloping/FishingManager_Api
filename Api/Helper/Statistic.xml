@@ -1,12 +1,7 @@
 ﻿<Statistik>
-    <Inhaber>
-        <Vorname />
-        <Nachname />
-        <Fischerverein>Fischerverein Muster</Fischerverein>
-    </Inhaber>
-    <Fangstatistik>
-        <Jahr>
-            <Datum />
-        </Jahr>
-    </Fangstatistik>
+    <Fischerverein>Fischerverein Muster</Fischerverein>
+    <Vorname />
+    <Nachname />
+    <Jahr />
+    <Monate/>
 </Statistik>
