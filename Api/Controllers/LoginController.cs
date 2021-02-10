@@ -22,6 +22,8 @@ namespace Api.Controllers
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Email == loginDto.Email && u.Password.Equals(loginDto.Password));
             if (user == null) return BadRequest("Email oder Password falsch");
+            if (!user.Active)
+                return BadRequest("Sie wurden von der Plattform gesperrt ! Bitte wenden Sie sich an den Administrator");
             return Ok(new AppUserDto()
             {
                 UserId = user.Id,

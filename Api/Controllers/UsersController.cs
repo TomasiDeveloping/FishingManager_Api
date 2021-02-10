@@ -43,5 +43,14 @@ namespace Api.Controllers
             if (newUser == null) return BadRequest("User konnte nicht hinzugefügt werden");
             return Ok(newUser);
         }
+
+        [HttpPut("{userId}")]
+        public async Task<ActionResult<UserDto>> Put(int userId, UserDto userDto)
+        {
+            if (userId <= 0) return BadRequest("Fehler mit UserId");
+            var checkUpdate = await _userRepository.UpdateUserAsync(userDto);
+            if (checkUpdate == null) return BadRequest("Fhler beim Update");
+            return Ok(userDto);
+        }
     }
 }

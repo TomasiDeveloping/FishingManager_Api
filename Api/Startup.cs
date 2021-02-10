@@ -34,6 +34,7 @@ namespace Api
             services.AddScoped<ILicenceRepository, LicenceRepository>();
             services.AddScoped<IAddressRepository, AddressRepository>();
             services.AddScoped<IStatisticRepository, StatisticRepository>();
+            services.AddScoped<IInfringementRepository, InfringementRepository>();
             services.AddDbContext<FishingManagerContext>(options => 
                 options.UseSqlServer(Configuration.GetConnectionString("FishingManager")));
             services.AddCors();

@@ -23,6 +23,15 @@ namespace Api.Controllers
             return Ok(statistic);
         }
 
+        [HttpGet("licence/{licenceId}")]
+        public async Task<ActionResult<StatisticDto>> GetByLicenceId(int licenceId)
+        {
+            if (licenceId <= 0) return BadRequest("LicenceId fehler");
+            var statistic = await _statisticRepository.GetStatisticByLicenceIdAsync(licenceId);
+            if (statistic == null) return NotFound("Keine Statistik gefunden");
+            return Ok(statistic);
+        }
+
         [HttpPost]
         public async Task<ActionResult<StatisticDto>> Post(StatisticDto statisticDto)
         {

@@ -47,7 +47,7 @@ namespace Api.Data.Repositories
             return await _context.Licences
                 .Include(l => l.User)
                 .Include(l => l.Creator)
-                .Where(l => l.User.Id == userId)
+                .Where(l => l.UserId == userId)
                 .Select(l => new LicenceDto()
                 {
                     Paid = l.Paid,
