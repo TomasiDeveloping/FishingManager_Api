@@ -44,12 +44,18 @@ namespace Api.Controllers
             return Ok(newUser);
         }
 
+        [HttpPost("changePassword")]
+        public async Task<ActionResult<bool>> ChangeUserPassword(ChangePasswordDto changePasswordDto)
+        {
+            return Ok(await _userRepository.ChangeUserPassword(changePasswordDto));
+        }
+        
         [HttpPut("{userId}")]
         public async Task<ActionResult<UserDto>> Put(int userId, UserDto userDto)
         {
             if (userId <= 0) return BadRequest("Fehler mit UserId");
             var checkUpdate = await _userRepository.UpdateUserAsync(userDto);
-            if (checkUpdate == null) return BadRequest("Fhler beim Update");
+            if (checkUpdate == null) return BadRequest("Fehler beim Update");
             return Ok(userDto);
         }
     }

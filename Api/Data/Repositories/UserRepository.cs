@@ -165,6 +165,12 @@ namespace Api.Data.Repositories
             return userDto;
         }
 
+        public async Task<bool> CheckPasswordAsync(int userId, string password)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            return user.Password.Equals(password);
+        }
+
         public async Task<UserDto> UpdateUserAsync(UserDto userDto)
         {
             var userToUpdate = await _context.Users.FindAsync(userDto.UserId);
@@ -174,10 +180,19 @@ namespace Api.Data.Repositories
             userToUpdate.PictureUrl = userDto.PictureUrl;
             userToUpdate.Active = userDto.Active;
             userToUpdate.RightId = userDto.RightId;
+            userToUpdate.Address = userDto.Address;
 
             var checkUpdate = await Complete();
 
             return checkUpdate ? userDto : null;
+        }
+
+        public async Task<bool> ChangeUserPassword(ChangePasswordDto changePasswordDto)
+        {
+            var user = await _context.Users.FindAsync(changePasswordDto.UserId);
+            if (user == null) return false;
+            user.Password = changePasswordDto.Password;
+            return await Complete();
         }
 
         public async Task<bool> DeleteUserAsync(int userId)
