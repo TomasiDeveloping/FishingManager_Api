@@ -44,5 +44,14 @@ namespace Api.Controllers
         {
             return Ok(await _fishingClubRepository.GetInfringementsAsync());
         }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<FishingClubDto>> Put(int id, FishingClubDto fishingClubDto)
+        {
+            if (id <= 0) return BadRequest("ID Fehler");
+            var checkUpdate = await _fishingClubRepository.UpdateAsync(fishingClubDto);
+            if (checkUpdate == null) return BadRequest("Fehler beim Update");
+            return Ok(checkUpdate);
+        }
     }
 }

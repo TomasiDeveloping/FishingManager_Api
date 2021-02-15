@@ -1,22 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Linq;
 using Api.Dtos;
+using Api.Entities;
+using Api.Helper;
 using Api.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+
+
 
 namespace Api.Data.Repositories
 {
     public class FishingClubRepository : IFishingClubRepository
     {
         private readonly FishingManagerContext _context;
+        private readonly DatabaseLogger _logger;
 
-        public FishingClubRepository(FishingManagerContext context)
+        public FishingClubRepository(FishingManagerContext context, DatabaseLogger logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<FishingClubDto> GetFishingClubAsync()
@@ -26,33 +32,47 @@ namespace Api.Data.Repositories
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
-            var rulesJson = new JObject();
-            var fishSpeciesJson = new JObject();
-
-            if (!string.IsNullOrEmpty(club.Rules))
+            var clubDto = new FishingClubDto()
             {
-                var ruleXml = new XmlDocument();
-                ruleXml.LoadXml(club.Rules);
-                rulesJson = JObject.Parse(JsonConvert.SerializeXmlNode(ruleXml));
-            }
-
-            if (!string.IsNullOrEmpty(club.FishSpecies))
-            {
-                var speciesXml = new XmlDocument();
-                speciesXml.LoadXml(club.FishSpecies);
-                fishSpeciesJson = JObject.Parse(JsonConvert.SerializeXmlNode(speciesXml));
-            }
-
-            return new FishingClubDto()
-            {
-                FishingClubId = club.Id,
-                Name = club.Name,
                 Address = club.Address,
+                Name = club.Name,
                 Website = club.Website,
                 PictureUrl = club.PictureUrl,
-                Rules = rulesJson,
-                FishSpecies = fishSpeciesJson
+                FishingClubId = club.Id,
+                Rules = new List<Rules>(),
+                FishSpecies = new List<FishSpecies>()
             };
+            var ruleDoc = new XmlDocument();
+            ruleDoc.LoadXml(club.Rules);
+            var rules = ruleDoc.SelectNodes("Regeln/Regel");
+            if (rules != null)
+            {
+                foreach (XmlNode rule in rules)
+                {
+                    clubDto.Rules.Add(new Rules()
+                    {
+                        Rule = rule.InnerText
+                    });
+                } 
+            }
+
+            var fishSpecieDoc = new XmlDocument();
+            fishSpecieDoc.LoadXml(club.FishSpecies);
+            var species = fishSpecieDoc.SelectNodes("FischArten/Fisch");
+            if (species != null)
+            {
+                foreach (XmlNode specie in species)
+                {
+                    clubDto.FishSpecies.Add(new FishSpecies()
+                    {
+                        FishSpecie = specie.SelectSingleNode("Name")?.InnerText,
+                        MinimumSize = specie.SelectSingleNode("Schonmass")?.InnerText,
+                        ClosedSeasonStart = specie.SelectSingleNode("SchonZeitVon")?.InnerText,
+                        ClosedSeasonEnd = specie.SelectSingleNode("SchonZeitBis")?.InnerText
+                    });
+                }
+            }
+            return clubDto;
         }
 
         public async Task<List<UserDto>> GetUsersAsync()
@@ -101,6 +121,7 @@ namespace Api.Data.Repositories
         {
             var statistics = await _context.Statistics
                 .Include(s => s.User)
+                .Include(s => s.Licence)
                 .AsNoTracking()
                 .ToListAsync();
         
@@ -116,6 +137,7 @@ namespace Api.Data.Repositories
                 dto.FullName = $"{item.User.FirstName} {item.User.LastName}";
                 dto.UserId = item.UserId;
                 dto.LicenceName = item.Licence.LicenseName;
+                dto.LicenceId = item.Licence.Id;
                 var statistic = new CatchStatistic
                 {
                     FishingClub = xml.SelectSingleNode("Statistik/Fischerverein")?.InnerText,
@@ -185,6 +207,63 @@ namespace Api.Data.Repositories
                 })
                 .AsNoTracking()
                 .ToListAsync();
+        }
+
+        public async Task<FishingClubDto> UpdateAsync(FishingClubDto fishingClubDto)
+        {
+            var club = await _context.FishingClubs.FindAsync(fishingClubDto.FishingClubId);
+            if (club == null) return null;
+            club.Address = fishingClubDto.Address;
+            club.Name = fishingClubDto.Name;
+            club.Website = fishingClubDto.Website;
+            club.PictureUrl = fishingClubDto.PictureUrl;
+
+            var ruleXml = new XDocument();
+            var rule = new XElement("Regeln");
+            ruleXml.Add(rule);
+            foreach (var item in fishingClubDto.Rules)
+            {
+                rule.Add(new XElement("Regel", item.Rule));
+            }
+
+            club.Rules = ruleXml.ToString();
+            
+            var fishSpecieXml = new XDocument();
+            var fishSpecie = new XElement("FischArten");
+            fishSpecieXml.Add(fishSpecie);
+            foreach (var item in fishingClubDto.FishSpecies)
+            {
+                var fish = new XElement("Fisch");
+                fish.Add(new XElement("Name", item.FishSpecie));
+                fish.Add(new XElement("Schonmass", item.MinimumSize));
+                fish.Add(new XElement("SchonZeitVon", item.ClosedSeasonStart));
+                fish.Add(new XElement("SchonZeitBis", item.ClosedSeasonEnd));
+                fishSpecie.Add(fish);
+            }
+
+            club.FishSpecies = fishSpecieXml.ToString();
+            
+            var checkUpdate = await Complete();
+            return checkUpdate ? fishingClubDto : null;
+        }
+
+        public async Task<bool> Complete()
+        {
+            try
+            {
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logger.InsertDatabaseLog(new DataBaseLog()
+                {
+                    Type = "Error FishingClubRepository",
+                    Message = e.InnerException?.Message,
+                    CreatedAt = DateTime.Now
+                });
+                return false;
+            }
         }
     }
 }

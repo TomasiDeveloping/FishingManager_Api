@@ -11,5 +11,7 @@ namespace Api.Interfaces
         public Task<List<LicenceDto>> GetLicensesAsync();
         public Task<List<StatisticDto>> GetStatisticsAsync();
         public Task<List<InfringementDto>> GetInfringementsAsync();
+        public Task<FishingClubDto> UpdateAsync(FishingClubDto fishingClubDto);
+        public Task<bool> Complete();
     }
 }
