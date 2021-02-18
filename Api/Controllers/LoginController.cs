@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Api.Data;
 using Api.Dtos;
+using Api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,13 +10,15 @@ namespace Api.Controllers
     public class LoginController : BaseController
     {
         private readonly FishingManagerContext _context;
+        private readonly ITokenService _tokenService;
 
-        public LoginController(FishingManagerContext context)
+        public LoginController(FishingManagerContext context, ITokenService tokenService)
         {
             _context = context;
+            _tokenService = tokenService;
         }
 
-        [HttpPost("Login")]
+        [HttpPost]
         public async Task<ActionResult<AppUserDto>> Login(LoginDto loginDto)
         {
             var user = await _context.Users
@@ -30,18 +33,17 @@ namespace Api.Controllers
                 FullName = $"{user.FirstName} {user.LastName}",
                 Email = user.Email,
                 RightId = user.RightId,
-                Token = "TEST_TOKEN"
+                Token = _tokenService.CreateToken(user)
             });
         }
 
-        [HttpPost("ForgotPassword")]
-        public async Task<ActionResult> ForgotPassword([FromBody] string email)
+        [HttpGet("ForgotPassword")]
+        public async Task<ActionResult<bool>> ForgotPassword([FromQuery] string email)
         {
             var user = await _context.Users
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Email.Equals(email));
-            if (user == null) return BadRequest("Kein User mit dieser Email registriert");
-            return Ok("Neues Password wird per E-Mail gesendet");
+            return Ok(user != null);
         }
     }
 }

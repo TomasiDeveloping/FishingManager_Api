@@ -23,6 +23,12 @@ namespace Api.Controllers
             return Ok(user);
         }
 
+        [HttpGet("emailExists")]
+        public async Task<ActionResult<bool>> CheckEmailExists([FromQuery] string email)
+        {
+            return Ok(await _userRepository.CheckEmailExistsAsync(email));
+        }
+
         [HttpGet("Licences/{userId}")]
         public async Task<ActionResult<List<LicenceDto>>> GetLicencesByUserId(int userId)
         {

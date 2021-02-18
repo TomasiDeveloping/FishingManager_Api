@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml;
 using Api.Dtos;
 using Api.Entities;
 using Api.Helper;
@@ -64,15 +65,56 @@ namespace Api.Data.Repositories
 
         public async Task<LicenceDto> InsertLicenceAsync(LicenceDto licenceDto)
         {
-            await _context.Licences.AddAsync(new Licence()
+            var newLicence = new Licence()
             {
                 UserId = licenceDto.UserId,
                 CreatorId = licenceDto.CreatorId,
                 LicenseName = licenceDto.LicenceName,
-                StartDate = licenceDto.StartDate,
-                EndDate = licenceDto.EndDate,
+                StartDate = new DateTime(licenceDto.StartDate.Year, licenceDto.StartDate.Month,
+                    licenceDto.StartDate.Day, 0, 0, 0),
+                EndDate = new DateTime(licenceDto.EndDate.Year, licenceDto.EndDate.Month, licenceDto.EndDate.Day, 23,
+                    59, 59),
                 Paid = licenceDto.Paid
-            });
+            };
+            var user = await _context.Users
+                .Select(u => new
+                {
+                    u.FirstName,
+                    u.LastName,
+                    UserId = u.Id
+                })
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserId == licenceDto.UserId);
+            
+            var xml = new XmlDocument();
+            xml.Load(@"Helper\Statistic.xml");
+
+            var nodeFirstName = xml.SelectSingleNode("Statistik/Vorname");
+            var nodeLastName = xml.SelectSingleNode("Statistik/Nachname");
+            var nodeYear = xml.SelectSingleNode("Statistik/Jahr");
+
+            if (nodeFirstName == null || nodeLastName == null || nodeYear == null)
+            {
+                _logger.InsertDatabaseLog(new DataBaseLog
+                {
+                    Type = "XML Error StatisticRepository",
+                    Message = "Fehler beim Zugriff auf XML Node"
+                });
+                return null;
+            }
+
+            nodeFirstName.InnerText = user.FirstName;
+            nodeLastName.InnerText = user.LastName;
+            nodeYear.InnerText = licenceDto.StartDate.Year.ToString();
+            var newStatistic = new Statistic()
+            {
+                Licence = newLicence,
+                UserId = licenceDto.UserId,
+                Year = licenceDto.StartDate.Year,
+                StatisticXml = xml.OuterXml
+            };
+            await _context.Statistics.AddAsync(newStatistic);
+         
             var checkInsert = await Complete();
 
             if (!checkInsert) return null;
@@ -80,7 +122,7 @@ namespace Api.Data.Repositories
             _logger.InsertDatabaseLog(new DataBaseLog()
             {
                 Type = "Neue Lizenz",
-                Message = $"Neue Lizenz {licenceDto.LicenceName} wurde hinzugefügt durch {licenceDto.CreatorName}",
+                Message = $"Neue Lizenz {licenceDto.LicenceName} wurde hinzugefügt durch {licenceDto.CreatorId}",
                 CreatedAt = DateTime.Now
             });
             return licenceDto;
@@ -93,9 +135,48 @@ namespace Api.Data.Repositories
             licenceToUpdate.CreatorId = licenceDto.CreatorId;
             licenceToUpdate.UserId = licenceDto.UserId;
             licenceToUpdate.Paid = licenceDto.Paid;
-            licenceToUpdate.StartDate = licenceDto.StartDate;
-            licenceToUpdate.EndDate = licenceDto.EndDate;
+            licenceToUpdate.StartDate = new DateTime(licenceDto.StartDate.Year, licenceDto.StartDate.Month,
+                licenceDto.StartDate.Day, 0, 0, 0).AddDays(1);
+            licenceToUpdate.EndDate = new DateTime(licenceDto.EndDate.Year, licenceDto.EndDate.Month,
+                licenceDto.EndDate.Day, 23, 59, 59);
             licenceToUpdate.LicenseName = licenceDto.LicenceName;
+
+            var user = await _context.Users
+                .Select(u => new
+                {
+                    u.FirstName,
+                    u.LastName,
+                    UserId = u.Id
+                })
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.UserId == licenceDto.UserId);
+            
+            var statistic = await _context.Statistics
+                .FirstOrDefaultAsync(s => s.LicenceId == licenceDto.LicenceId);
+            statistic.UserId = licenceDto.UserId;
+            statistic.Year = licenceDto.EndDate.Year;
+
+            var xml = new XmlDocument();
+            xml.LoadXml(statistic.StatisticXml);
+            
+            var nodeFirstName = xml.SelectSingleNode("Statistik/Vorname");
+            var nodeLastName = xml.SelectSingleNode("Statistik/Nachname");
+            var nodeYear = xml.SelectSingleNode("Statistik/Jahr");
+
+            if (nodeFirstName == null || nodeLastName == null || nodeYear == null)
+            {
+                _logger.InsertDatabaseLog(new DataBaseLog
+                {
+                    Type = "XML Error StatisticRepository",
+                    Message = "Fehler beim Zugriff auf XML Node"
+                });
+                return null;
+            }
+
+            nodeFirstName.InnerText = user.FirstName;
+            nodeLastName.InnerText = user.LastName;
+            nodeYear.InnerText = licenceDto.StartDate.Year.ToString();
+            statistic.StatisticXml = xml.OuterXml;
 
             var checkUpdate = await Complete();
 
@@ -106,6 +187,9 @@ namespace Api.Data.Repositories
         {
             var licenceToDelete = await _context.Licences.FindAsync(licenceId);
             if (licenceToDelete == null) return false;
+            var statisticToDelete = await _context.Statistics.FirstOrDefaultAsync(s => s.LicenceId == licenceId);
+            if (statisticToDelete == null) return false;
+            _context.Remove(statisticToDelete);
             _context.Remove(licenceToDelete);
             var checkDelete = await Complete();
             if (!checkDelete) return false;

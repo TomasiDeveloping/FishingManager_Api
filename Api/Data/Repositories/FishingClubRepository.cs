@@ -209,6 +209,13 @@ namespace Api.Data.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<Right>> GetRightsAsync()
+        {
+            return await _context.Rights
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
         public async Task<FishingClubDto> UpdateAsync(FishingClubDto fishingClubDto)
         {
             var club = await _context.FishingClubs.FindAsync(fishingClubDto.FishingClubId);

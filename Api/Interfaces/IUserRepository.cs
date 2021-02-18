@@ -14,6 +14,7 @@ namespace Api.Interfaces
         public Task<UserDto> UpdateUserAsync(UserDto userDto);
         public Task<bool> CheckPasswordAsync(int userId, string password);
         public Task<bool> ChangeUserPassword(ChangePasswordDto changePasswordDto);
+        public Task<bool> CheckEmailExistsAsync(string email);
         public Task<bool> DeleteUserAsync(int userId);
         public Task<bool> Complete();
     }

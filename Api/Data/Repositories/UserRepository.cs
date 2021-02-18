@@ -195,6 +195,14 @@ namespace Api.Data.Repositories
             return await Complete();
         }
 
+        public async Task<bool> CheckEmailExistsAsync(string email)
+        {
+            var user = await _context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Email.Equals(email));
+            return user != null;
+        }
+
         public async Task<bool> DeleteUserAsync(int userId)
         {
             var userToDelete = await _context.Users.FindAsync(userId);
