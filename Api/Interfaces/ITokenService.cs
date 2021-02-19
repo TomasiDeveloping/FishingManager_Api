@@ -1,5 +1,4 @@
-﻿using Api.Dtos;
-using Api.Entities;
+﻿using Api.Entities;
 
 namespace Api.Interfaces
 {

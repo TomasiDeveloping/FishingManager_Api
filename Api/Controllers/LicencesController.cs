@@ -2,10 +2,12 @@
 using System.Threading.Tasks;
 using Api.Dtos;
 using Api.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [Authorize]
     public class LicencesController : BaseController
     {
         private readonly ILicenceRepository _licenceRepository;
@@ -35,7 +37,7 @@ namespace Api.Controllers
         [HttpPost]
         public async Task<ActionResult<LicenceDto>> Post(LicenceDto licenceDto)
         {
-            if (licenceDto == null) return BadRequest("Keine Lizenz zum Einfügen");
+            if (licenceDto == null) return BadRequest("Keine Lizenz zum einfügen");
                 if (licenceDto.UserId <= 0 || licenceDto.CreatorId <= 0) return BadRequest("User oder Creator Fehler");
 
             var newLicence = await _licenceRepository.InsertLicenceAsync(licenceDto);
@@ -49,7 +51,7 @@ namespace Api.Controllers
             if (licenceDto == null) return BadRequest("Keine Lizenz zum Updaten");
             if (id <= 0 || licenceDto.UserId <= 0 || licenceDto.CreatorId <= 0) return BadRequest("Id Fehler");
             var updateLicence = await _licenceRepository.UpdateLicenceAsync(licenceDto);
-            if (updateLicence == null) return BadRequest("Fehler beim Updaten");
+            if (updateLicence == null) return BadRequest("Fehler beim aktualisieren");
             return Ok(updateLicence);
         }
 

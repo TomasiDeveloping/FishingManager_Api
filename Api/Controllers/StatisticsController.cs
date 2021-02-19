@@ -1,10 +1,12 @@
 ﻿using System.Threading.Tasks;
 using Api.Dtos;
 using Api.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [Authorize]
     public class StatisticsController : BaseController
     {
         private readonly IStatisticRepository _statisticRepository;
@@ -45,10 +47,10 @@ namespace Api.Controllers
         public async Task<ActionResult<StatisticDto>> Put(int id, StatisticDto statisticDto)
         {
             var statistic = await _statisticRepository.GetStatisticByIdAsync(id);
-            if (statistic == null) return BadRequest("Statistik zum Updaten nicht vorhanden");
+            if (statistic == null) return BadRequest("Statistik nicht vorhanden");
             var checkUpdate = await _statisticRepository.UpdateStatisticAsync(statisticDto);
         
-            if (checkUpdate == null) return BadRequest("Fehler: Statistik konnte nicht geupdatet werden");
+            if (checkUpdate == null) return BadRequest("Fehler: Statistik konnte nicht aktualisiert werden");
             return Ok(checkUpdate);
         }
 

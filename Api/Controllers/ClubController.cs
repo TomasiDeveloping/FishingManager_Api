@@ -59,7 +59,7 @@ namespace Api.Controllers
         {
             if (id <= 0) return BadRequest("ID Fehler");
             var checkUpdate = await _fishingClubRepository.UpdateAsync(fishingClubDto);
-            if (checkUpdate == null) return BadRequest("Fehler beim Update");
+            if (checkUpdate == null) return BadRequest("Fehler beim aktualisieren");
             return Ok(checkUpdate);
         }
     }

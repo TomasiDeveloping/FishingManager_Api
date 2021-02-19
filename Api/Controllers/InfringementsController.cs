@@ -2,10 +2,12 @@
 using System.Threading.Tasks;
 using Api.Dtos;
 using Api.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [Authorize]
     public class InfringementsController : BaseController
     {
         private readonly IInfringementRepository _infringementRepository;

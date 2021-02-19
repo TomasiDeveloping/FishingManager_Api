@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Api.Data;
 using Api.Dtos;
+using Api.Helper.Methods;
 using Api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,22 +12,25 @@ namespace Api.Controllers
     {
         private readonly FishingManagerContext _context;
         private readonly ITokenService _tokenService;
+        private readonly IServiceRepository _serviceRepository;
 
-        public LoginController(FishingManagerContext context, ITokenService tokenService)
+        public LoginController(FishingManagerContext context, ITokenService tokenService, IServiceRepository serviceRepository)
         {
             _context = context;
             _tokenService = tokenService;
+            _serviceRepository = serviceRepository;
         }
 
         [HttpPost]
         public async Task<ActionResult<AppUserDto>> Login(LoginDto loginDto)
         {
+            var hashPassword = CreatePassword.CreateHash(loginDto.Password);
             var user = await _context.Users
                 .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Email == loginDto.Email && u.Password.Equals(loginDto.Password));
-            if (user == null) return BadRequest("Email oder Password falsch");
+                .FirstOrDefaultAsync(u => u.Email == loginDto.Email && u.Password.Equals(hashPassword));
+            if (user == null) return BadRequest("E-Mail oder Passwort falsch");
             if (!user.Active)
-                return BadRequest("Sie wurden von der Plattform gesperrt ! Bitte wenden Sie sich an den Administrator");
+                return BadRequest("Sie wurden von der Plattform gesperrt! Bitte wenden Sie sich an den Administrator");
             return Ok(new AppUserDto()
             {
                 UserId = user.Id,
@@ -43,7 +47,8 @@ namespace Api.Controllers
             var user = await _context.Users
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Email.Equals(email));
-            return Ok(user != null);
+            if (user == null) return false;
+            return Ok(await _serviceRepository.SendNewPasswordMailAsync(user));
         }
     }
 }

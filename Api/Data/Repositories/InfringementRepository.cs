@@ -94,14 +94,23 @@ namespace Api.Data.Repositories
             return checkInsert ? infringementDto : null;
         }
         
-        public Task<InfringementDto> UpdateInfringementAsync(InfringementDto infringementDto)
+        public async Task<InfringementDto> UpdateInfringementAsync(InfringementDto infringementDto)
         {
-            throw new System.NotImplementedException();
+            var infringement = await _context.Infringements.FindAsync(infringementDto.InfringementId);
+            if (infringement == null) return null;
+            infringement.Description = infringementDto.Description;
+            infringement.CreatorId = infringementDto.CreatorId;
+            infringement.UserId = infringementDto.UserId;
+            var checkUpdate = await Complete();
+            return checkUpdate ? infringementDto : null;
         }
 
-        public Task<bool> DeleteInfringementAsync(int id)
+        public async Task<bool> DeleteInfringementAsync(int id)
         {
-            throw new System.NotImplementedException();
+            var toDelete = await _context.Infringements.FindAsync(id);
+            if (toDelete == null) return false;
+            _context.Remove(toDelete);
+            return await Complete();
         }
 
         public async Task<bool> Complete()

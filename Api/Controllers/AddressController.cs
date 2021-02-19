@@ -2,10 +2,12 @@
 using System.Threading.Tasks;
 using Api.Entities;
 using Api.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
+    [Authorize]
     public class AddressController : BaseController
     {
         private readonly IAddressRepository _addressRepository;
@@ -43,7 +45,7 @@ namespace Api.Controllers
             var checkAddress = await _addressRepository.GetAddressByIdAsync(id);
             if (checkAddress == null) return BadRequest("Addresse nicht gefunden");
             var updateAddress = await _addressRepository.UpdateAddressAsync(address);
-            if (updateAddress == null) return BadRequest("Adresse konnte nicht geupdatet werden");
+            if (updateAddress == null) return BadRequest("Adresse konnte nicht aktualisiert werden");
             return Ok(updateAddress);
         }
 

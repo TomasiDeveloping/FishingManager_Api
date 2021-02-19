@@ -2,6 +2,7 @@ using System.Text;
 using Api.Data;
 using Api.Data.Repositories;
 using Api.Helper;
+using Api.Helper.Methods;
 using Api.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -31,6 +32,10 @@ namespace Api
                 .AddNewtonsoftJson(options =>
                     options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
                 );
+            var emailConfig = Configuration
+                .GetSection("EmailConfiguration")
+                .Get<EmailConfiguration>();
+            services.AddSingleton(emailConfig);
             services.AddTransient<DatabaseLogger>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IUserRepository, UserRepository>();
@@ -39,6 +44,7 @@ namespace Api
             services.AddScoped<IAddressRepository, AddressRepository>();
             services.AddScoped<IStatisticRepository, StatisticRepository>();
             services.AddScoped<IInfringementRepository, InfringementRepository>();
+            services.AddScoped<IServiceRepository, ServiceRepository>();
             services.AddDbContext<FishingManagerContext>(options => 
                 options.UseSqlServer(Configuration.GetConnectionString("FishingManager")));
             services.AddCors();

@@ -8,7 +8,7 @@ using Api.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Api.Helper
+namespace Api.Helper.Methods
 {
     public class TokenService : ITokenService
     {
@@ -24,8 +24,8 @@ namespace Api.Helper
         {
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.GivenName, $"{user.FirstName} {user.LastName}")
+                new(JwtRegisteredClaimNames.Email, user.Email),
+                new(JwtRegisteredClaimNames.GivenName, $"{user.FirstName} {user.LastName}")
             };
 
             var creds = new SigningCredentials(_key, SecurityAlgorithms.HmacSha512Signature);

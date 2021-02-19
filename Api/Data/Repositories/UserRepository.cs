@@ -6,6 +6,7 @@ using System.Xml;
 using Api.Dtos;
 using Api.Entities;
 using Api.Helper;
+using Api.Helper.Methods;
 using Api.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,11 +16,13 @@ namespace Api.Data.Repositories
     {
         private readonly FishingManagerContext _context;
         private readonly DatabaseLogger _logger;
+        private readonly IServiceRepository _serviceRepository;
 
-        public UserRepository(FishingManagerContext context, DatabaseLogger logger)
+        public UserRepository(FishingManagerContext context, DatabaseLogger logger, IServiceRepository serviceRepository)
         {
             _context = context;
             _logger = logger;
+            _serviceRepository = serviceRepository;
         }
         public async Task<UserDto> GetUserByIdAsync(int userId)
         {
@@ -142,6 +145,7 @@ namespace Api.Data.Repositories
 
         public async Task<UserDto> InsertUserAsync(UserDto userDto)
         {
+            var newPassword = CreatePassword.CreateNewPassword();
             await _context.AddAsync(new User()
             {
                 FirstName = userDto.FirstName,
@@ -151,7 +155,7 @@ namespace Api.Data.Repositories
                 PictureUrl = userDto.PictureUrl,
                 Active = userDto.Active,
                 CreatedAt = DateTime.Now,
-                Password = "Welcome",
+                Password = CreatePassword.CreateHash(newPassword),
                 Address = userDto.Address
             });
             var checkInsert = await Complete();
@@ -162,15 +166,10 @@ namespace Api.Data.Repositories
                 Message = $"Neuer User {userDto.FirstName} {userDto.LastName} wurde hinzugefügt",
                 CreatedAt = DateTime.Now
             });
+            await _serviceRepository.SendNewUserMailAsync(userDto, newPassword);
             return userDto;
         }
-
-        public async Task<bool> CheckPasswordAsync(int userId, string password)
-        {
-            var user = await _context.Users.FindAsync(userId);
-            return user.Password.Equals(password);
-        }
-
+        
         public async Task<UserDto> UpdateUserAsync(UserDto userDto)
         {
             var userToUpdate = await _context.Users.FindAsync(userDto.UserId);
@@ -191,7 +190,7 @@ namespace Api.Data.Repositories
         {
             var user = await _context.Users.FindAsync(changePasswordDto.UserId);
             if (user == null) return false;
-            user.Password = changePasswordDto.Password;
+            user.Password = CreatePassword.CreateHash(changePasswordDto.Password);
             return await Complete();
         }
 
