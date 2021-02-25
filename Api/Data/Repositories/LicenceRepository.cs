@@ -85,9 +85,14 @@ namespace Api.Data.Repositories
                 })
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserId == licenceDto.UserId);
-            
             var xml = new XmlDocument();
-            xml.Load(@"Helper\Statistic.xml");
+            xml.LoadXml(@"<Statistik>
+                 <Fischerverein>Fischerverein Muster</Fischerverein>
+                 <Vorname />
+                 <Nachname />
+                 <Jahr />
+                 <Monate/>
+                 </Statistik>");
 
             var nodeFirstName = xml.SelectSingleNode("Statistik/Vorname");
             var nodeLastName = xml.SelectSingleNode("Statistik/Nachname");

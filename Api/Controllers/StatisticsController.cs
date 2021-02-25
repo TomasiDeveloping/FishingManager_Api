@@ -1,12 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
 using Api.Dtos;
 using Api.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
-    [Authorize]
+    // [Authorize]
     public class StatisticsController : BaseController
     {
         private readonly IStatisticRepository _statisticRepository;
@@ -33,6 +33,21 @@ namespace Api.Controllers
             if (statistic == null) return NotFound("Keine Statistik gefunden");
             return Ok(statistic);
         }
+
+        [HttpGet("excel")]
+        public async Task<IActionResult> CreateStatistic([FromQuery] string year)
+        {
+            const string contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            var fileName = $"Statistik_{year}.xlsx";
+            await using var stream = new MemoryStream();
+            
+            var workbook = await _statisticRepository.CreateStatisticsOfYear(int.Parse(year));
+            workbook.SaveAs(stream);
+            var content = stream.ToArray();
+            
+            return File(content, contentType, fileName);
+        }
+    
 
         [HttpPost]
         public async Task<ActionResult<StatisticDto>> Post(StatisticDto statisticDto)

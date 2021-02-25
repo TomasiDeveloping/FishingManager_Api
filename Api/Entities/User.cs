@@ -17,6 +17,7 @@ namespace Api.Entities
         public bool Active { get; set; }
         public string PictureUrl { get; set; }
         public DateTime CreatedAt { get; set; }
+        public int UserFlag { get; set; }
         public ICollection<Licence> Licences { get; set; }
     }
 }

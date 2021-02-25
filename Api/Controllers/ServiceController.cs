@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Api.Dtos;
+using Api.Helper.Methods;
 using Api.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,7 +14,7 @@ namespace Api.Controllers
         {
             _serviceRepository = serviceRepository;
         }
-
+        
         [HttpPost("contact")]
         public async Task<ActionResult<bool>> SendContactMail(ContactDto contactDto)
         {

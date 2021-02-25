@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Api.Dtos;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace Api.Interfaces
 {
@@ -10,6 +12,7 @@ namespace Api.Interfaces
         public Task<StatisticDto> InsertStatisticAsync(StatisticDto statisticDto);
         public Task<StatisticDto> UpdateStatisticAsync(StatisticDto statisticDto);
         public Task<bool> DeleteStatisticAsync(int statisticId);
+        public Task<XLWorkbook> CreateStatisticsOfYear(int year);
         public Task<bool> Complete();
     }
 }

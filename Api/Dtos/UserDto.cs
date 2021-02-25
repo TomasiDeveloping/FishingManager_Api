@@ -13,5 +13,6 @@ namespace Api.Dtos
         public string Email { get; set; }
         public Address Address { get; set; }
         public bool Active { get; set; }
+        public int UserFlag { get; set; }
     }
 }

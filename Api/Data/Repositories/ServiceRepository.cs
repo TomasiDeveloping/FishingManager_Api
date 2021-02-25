@@ -52,6 +52,7 @@ namespace Api.Data.Repositories
             if (!checkMailSend) return false;
             var userToUpdate = await _context.Users.FindAsync(user.Id);
             userToUpdate.Password = hashPassword;
+            userToUpdate.UserFlag = 1;
             await _context.SaveChangesAsync();
             return true;
 

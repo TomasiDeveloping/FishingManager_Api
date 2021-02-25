@@ -39,6 +39,7 @@ namespace Api.Data.Repositories
                 Website = club.Website,
                 PictureUrl = club.PictureUrl,
                 FishingClubId = club.Id,
+                ExternRuleUrl = club.ExternRuleUrl,
                 Rules = new List<Rules>(),
                 FishSpecies = new List<FishSpecies>()
             };
@@ -90,9 +91,11 @@ namespace Api.Data.Repositories
                     RightId = u.RightId,
                     Active = u.Active,
                     RightName = u.Right.Name,
-                    Address = u.Address
+                    Address = u.Address,
+                    UserFlag = u.UserFlag
                 })
                 .AsNoTracking()
+                .Where(u => u.RightName != "System-Admin")
                 .ToListAsync();
         }
 
@@ -218,12 +221,20 @@ namespace Api.Data.Repositories
 
         public async Task<FishingClubDto> UpdateAsync(FishingClubDto fishingClubDto)
         {
-            var club = await _context.FishingClubs.FindAsync(fishingClubDto.FishingClubId);
+            var club = await _context.FishingClubs
+                .Include(c => c.Address)
+                .FirstOrDefaultAsync(c => c.Id == fishingClubDto.FishingClubId);
             if (club == null) return null;
-            club.Address = fishingClubDto.Address;
+            club.Address.City = fishingClubDto.Address.City;
+            club.Address.Phone = fishingClubDto.Address.Phone;
+            club.Address.Street = fishingClubDto.Address.Street;
+            club.Address.Title = fishingClubDto.Address.Title;
+            club.Address.Zip = fishingClubDto.Address.Zip;
+            club.Address.AddressAddition = fishingClubDto.Address.AddressAddition;
             club.Name = fishingClubDto.Name;
             club.Website = fishingClubDto.Website;
             club.PictureUrl = fishingClubDto.PictureUrl;
+            club.ExternRuleUrl = fishingClubDto.ExternRuleUrl;
 
             var ruleXml = new XDocument();
             var rule = new XElement("Regeln");

@@ -46,7 +46,7 @@ namespace Api.Helper.Methods
         {
             return $"<h2>Willkommen beim Fischer Lizenz Manager</h2><br>" +
                    $"<h3>Hallo {userDto.FirstName} {userDto.LastName}<h3>" +
-                   $"<p>Du kannst ab sofort den Lizenz Manager unter <a href='localhost:4200'>Fischer Manager</a> verwenden</p><br>" +
+                   $"<p>Du kannst ab sofort den Lizenz Manager unter <a href='https://fischerlizenzmanager.ch/'>Fischer Manager</a> verwenden</p><br>" +
                    $"<p>Login E-Mail: <b>{userDto.Email}</b></p>" +
                    $"<p>Passwort: <b>{clearTextPassword}</b></p><br>" +
                    $"<p>Freundliche Grüsse</p>" +

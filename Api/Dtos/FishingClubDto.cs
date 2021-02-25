@@ -13,6 +13,7 @@ namespace Api.Dtos
         public ICollection<FishSpecies> FishSpecies { get; set; }
         public string Website { get; set; }
         public string PictureUrl { get; set; }
+        public string ExternRuleUrl { get; set; }
     }
 
     public class Rules

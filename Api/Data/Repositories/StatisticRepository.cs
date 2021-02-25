@@ -7,7 +7,10 @@ using System.Xml.Linq;
 using Api.Dtos;
 using Api.Entities;
 using Api.Helper;
+using Api.Helper.Methods;
 using Api.Interfaces;
+using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -271,6 +274,15 @@ namespace Api.Data.Repositories
                 CreatedAt = DateTime.Now
             });
             return true;
+        }
+
+        public async Task<XLWorkbook> CreateStatisticsOfYear(int year)
+        {
+            var statistics = await _context.Statistics
+                .Where(s => s.Year == year)
+                .AsNoTracking()
+                .ToListAsync();
+            return CreateStatisticsXml.CreateYearStatistics(statistics, year);
         }
 
         public async Task<bool> Complete()

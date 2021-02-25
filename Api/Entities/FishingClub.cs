@@ -16,5 +16,6 @@ namespace Api.Entities
         public string FishSpecies { get; set; }
         public string Website { get; set; }
         public string PictureUrl { get; set; }
+        public string ExternRuleUrl { get; set; }
     }
 }

@@ -39,7 +39,8 @@ namespace Api.Data.Repositories
                     Active = u.Active,
                     RightName = u.Right.Name,
                     PictureUrl = u.PictureUrl,
-                    Address = u.Address
+                    Address = u.Address,
+                    UserFlag = u.UserFlag
                 })
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.UserId == userId);
@@ -156,7 +157,8 @@ namespace Api.Data.Repositories
                 Active = userDto.Active,
                 CreatedAt = DateTime.Now,
                 Password = CreatePassword.CreateHash(newPassword),
-                Address = userDto.Address
+                Address = userDto.Address,
+                UserFlag = 1
             });
             var checkInsert = await Complete();
             if (!checkInsert) return null;
@@ -172,14 +174,22 @@ namespace Api.Data.Repositories
         
         public async Task<UserDto> UpdateUserAsync(UserDto userDto)
         {
-            var userToUpdate = await _context.Users.FindAsync(userDto.UserId);
+            var userToUpdate = await _context.Users
+                .Include(u => u.Address)
+                .FirstOrDefaultAsync(u => u.Id == userDto.UserId);
             userToUpdate.FirstName = userDto.FirstName;
             userToUpdate.LastName = userDto.LastName;
             userToUpdate.Email = userDto.Email;
             userToUpdate.PictureUrl = userDto.PictureUrl;
             userToUpdate.Active = userDto.Active;
             userToUpdate.RightId = userDto.RightId;
-            userToUpdate.Address = userDto.Address;
+            userToUpdate.UserFlag = userDto.UserFlag;
+            userToUpdate.Address.City = userDto.Address.City;
+            userToUpdate.Address.Phone = userDto.Address.Phone;
+            userToUpdate.Address.Street = userDto.Address.Street;
+            userToUpdate.Address.Title = userDto.Address.Title;
+            userToUpdate.Address.Zip = userDto.Address.Zip;
+            userToUpdate.Address.AddressAddition = userDto.Address.AddressAddition;
 
             var checkUpdate = await Complete();
 
@@ -191,6 +201,7 @@ namespace Api.Data.Repositories
             var user = await _context.Users.FindAsync(changePasswordDto.UserId);
             if (user == null) return false;
             user.Password = CreatePassword.CreateHash(changePasswordDto.Password);
+            user.UserFlag = 0;
             return await Complete();
         }
 
