@@ -10,6 +10,7 @@ namespace Api.Entities
         public User Creator { get; set; }
         public int CreatorId { get; set; }
         public string LicenseName { get; set; }
+        public int Year { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public bool Paid { get; set; }

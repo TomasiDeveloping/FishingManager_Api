@@ -62,5 +62,13 @@ namespace Api.Controllers
             if (checkUpdate == null) return BadRequest("Fehler beim aktualisieren");
             return Ok(checkUpdate);
         }
+
+        [HttpPost]
+        public async Task<ActionResult<FishingClubDto>> Post(FishingClubDto fishingClubDto)
+        {
+            var checkInsert = await _fishingClubRepository.InsertAsync(fishingClubDto);
+            if (checkInsert == null) return BadRequest("Fehler beim hinzufügen");
+            return Ok(checkInsert);
+        }
     }
 }

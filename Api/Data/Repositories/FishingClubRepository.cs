@@ -32,6 +32,8 @@ namespace Api.Data.Repositories
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
+            if (club == null) return null;
+            
             var clubDto = new FishingClubDto()
             {
                 Address = club.Address,
@@ -114,9 +116,12 @@ namespace Api.Data.Repositories
                     LicenceName = l.LicenseName,
                     StartDate = l.StartDate,
                     EndDate = l.EndDate,
-                    Paid = l.Paid
+                    Paid = l.Paid,
+                    Year = l.Year
                 })
                 .AsNoTracking()
+                .OrderByDescending(l => l.Year)
+                .ThenBy(l => l.EndDate)
                 .ToListAsync();
         }
 
@@ -126,6 +131,7 @@ namespace Api.Data.Repositories
                 .Include(s => s.User)
                 .Include(s => s.Licence)
                 .AsNoTracking()
+                .OrderByDescending(s => s.Year)
                 .ToListAsync();
         
             var dtoList = new List<StatisticDto>();
@@ -210,6 +216,56 @@ namespace Api.Data.Repositories
                 })
                 .AsNoTracking()
                 .ToListAsync();
+        }
+
+        public async Task<FishingClubDto> InsertAsync(FishingClubDto fishingClubDto)
+        {
+            var newClub = new FishingClub()
+            {
+                Name = fishingClubDto.Name,
+                Website = fishingClubDto.Website,
+                PictureUrl = fishingClubDto.PictureUrl,
+                ExternRuleUrl = fishingClubDto.ExternRuleUrl,
+                CreatedAt = DateTime.Now,
+                Address = fishingClubDto.Address,
+                Rules = null,
+                FishSpecies = null,
+            };
+            if (fishingClubDto.Rules != null)
+            {
+                var ruleXml = new XDocument();
+                var rule = new XElement("Regeln");
+                ruleXml.Add(rule);
+                foreach (var item in fishingClubDto.Rules)
+                {
+                    rule.Add(new XElement("Regel", item.Rule));
+                }
+
+                newClub.Rules = ruleXml.ToString();
+            }
+
+            if (fishingClubDto.FishSpecies != null)
+            {
+                var fishSpecieXml = new XDocument();
+                var fishSpecie = new XElement("FischArten");
+                fishSpecieXml.Add(fishSpecie);
+                foreach (var item in fishingClubDto.FishSpecies)
+                {
+                    var fish = new XElement("Fisch");
+                    fish.Add(new XElement("Name", item.FishSpecie));
+                    fish.Add(new XElement("Schonmass", item.MinimumSize));
+                    fish.Add(new XElement("SchonZeitVon", item.ClosedSeasonStart));
+                    fish.Add(new XElement("SchonZeitBis", item.ClosedSeasonEnd));
+                    fishSpecie.Add(fish);
+                }
+
+                newClub.FishSpecies = fishSpecieXml.ToString();
+            }
+
+            await _context.FishingClubs.AddAsync(newClub);
+            var checkInsert = await Complete();
+            if (checkInsert) fishingClubDto.FishingClubId = newClub.Id;
+            return checkInsert ? fishingClubDto : null;
         }
 
         public async Task<List<Right>> GetRightsAsync()

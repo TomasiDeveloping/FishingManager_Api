@@ -36,9 +36,12 @@ namespace Api.Data.Repositories
                     CreatorName = $"{l.Creator.FirstName} {l.Creator.LastName}",
                     StartDate = l.StartDate,
                     EndDate = l.EndDate,
-                    Paid = l.Paid
+                    Paid = l.Paid,
+                    Year = l.Year
                 })
                 .AsNoTracking()
+                .OrderByDescending(l => l.Year)
+                .ThenBy(l => l.EndDate)
                 .ToListAsync();
         }
 
@@ -57,7 +60,8 @@ namespace Api.Data.Repositories
                     CreatorName = $@"{l.Creator.FirstName} {l.Creator.LastName}",
                     StartDate = l.StartDate,
                     EndDate = l.EndDate,
-                    Paid = l.Paid
+                    Paid = l.Paid,
+                    Year = l.Year
                 })
                 .AsNoTracking()
                 .FirstOrDefaultAsync(l => l.LicenceId == licenceId);
@@ -74,7 +78,8 @@ namespace Api.Data.Repositories
                     licenceDto.StartDate.Day, 0, 0, 0),
                 EndDate = new DateTime(licenceDto.EndDate.Year, licenceDto.EndDate.Month, licenceDto.EndDate.Day, 23,
                     59, 59),
-                Paid = licenceDto.Paid
+                Paid = licenceDto.Paid,
+                Year = licenceDto.Year
             };
             var user = await _context.Users
                 .Select(u => new
@@ -110,7 +115,7 @@ namespace Api.Data.Repositories
 
             nodeFirstName.InnerText = user.FirstName;
             nodeLastName.InnerText = user.LastName;
-            nodeYear.InnerText = licenceDto.StartDate.Year.ToString();
+            nodeYear.InnerText = licenceDto.Year.ToString();
             var newStatistic = new Statistic()
             {
                 Licence = newLicence,
@@ -145,6 +150,7 @@ namespace Api.Data.Repositories
             licenceToUpdate.EndDate = new DateTime(licenceDto.EndDate.Year, licenceDto.EndDate.Month,
                 licenceDto.EndDate.Day, 23, 59, 59);
             licenceToUpdate.LicenseName = licenceDto.LicenceName;
+            licenceToUpdate.Year = licenceDto.Year;
 
             var user = await _context.Users
                 .Select(u => new

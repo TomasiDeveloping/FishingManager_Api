@@ -42,25 +42,25 @@ namespace Api.Helper.Methods
                         foreach (XmlNode day in days)
                         {
                             if (day.HasChildNodes == false) continue;
-                            var newTag = new Days
+                            var newDay = new Days
                             {
                                 Day = day.SelectSingleNode("Tag")?.InnerText,
                                 Hour = day.SelectSingleNode("Stunden")?.InnerText,
                                 FishCatches = new List<FishCatch>()
                             };
-                            newMonth.Days.Add(newTag);
+                            newMonth.Days.Add(newDay);
 
                             var fishCatches = day.SelectNodes("Fang");
                             if (fishCatches == null) continue;
                             foreach (XmlNode fishCatch in fishCatches)
                             {
                                 if (fishCatch.HasChildNodes == false) continue;
-                                var newFang = new FishCatch
+                                var newCatch = new FishCatch
                                 {
                                     Number = fishCatch.SelectSingleNode("Anzahl")?.InnerText,
                                     Fish = fishCatch.SelectSingleNode("Fisch")?.InnerText
                                 };
-                                newTag.FishCatches.Add(newFang);
+                                newDay.FishCatches.Add(newCatch);
                             }
                         }
                     }
@@ -137,7 +137,6 @@ namespace Api.Helper.Methods
             {
                 worksheet.Cell(row, 1).Value = "Monat";
                 worksheet.Cell(row, 1).Style.Font.SetBold();
-
                 worksheet.Cell(row, 2).Value = "Ausgeübte Stunden";
                 worksheet.Cell(row, 2).Style.Font.SetBold();
                 worksheet.Row(row).Style.Font.FontSize = 12;
@@ -146,8 +145,8 @@ namespace Api.Helper.Methods
                 worksheet.Cell(row, 4).Value = "Anzahl";
                 worksheet.Cell(row, 4).Style.Font.SetBold();
                 worksheet.Row(row).Style.Fill.SetBackgroundColor(XLColor.LightGray);
+                
                 row++;
-
                 worksheet.Cell(row, 1).Style.Font.SetFontSize(12);
                 worksheet.Cell(row, 1).Value = GetMonthName(month);
                 worksheet.Cell(row, 2).Style.Font.SetFontSize(12);
@@ -165,27 +164,24 @@ namespace Api.Helper.Methods
                 row++;
             }
 
-
-            worksheet.Cell(++row, 1).Value = "Jahres Total";
-            worksheet.Cell(row, 1).Style.Font.SetFontSize(16);
-            worksheet.Cell(row, 1).Style.Font.SetBold();
+            row++;
+            worksheet.Cell(row, 1).Value = "Jahres Total";
+            worksheet.Cell(row, 1).Style.Font.SetFontSize(16).Font.SetBold();
             worksheet.Cell(row, 1).Style.Fill.BackgroundColor = XLColor.LightGreen;
+            
             row++;
             worksheet.Cell(row, 1).Value = "Stunden";
-            worksheet.Cell(row, 1).Style.Font.SetFontSize(12);
-            worksheet.Cell(row, 1).Style.Font.SetBold();
-
+            worksheet.Cell(row, 1).Style.Font.SetFontSize(12).Font.SetBold();
             worksheet.Cell(row, 2).Value = orderedDictionary.Sum(a => a.Value);
             worksheet.Cell(row, 2).Style.Font.SetBold();
             row++;
             row++;
+            
             foreach (var (fish, number) in fishNumberDictionary)
             {
-                worksheet.Cell(row, 1).Style.Font.SetFontSize(12);
-                worksheet.Cell(row, 1).Style.Font.SetBold();
+                worksheet.Cell(row, 1).Style.Font.SetFontSize(12).Font.SetBold();
                 worksheet.Cell(row, 1).Value = fish;
-                worksheet.Cell(row, 2).Style.Font.SetFontSize(12);
-                worksheet.Cell(row, 2).Style.Font.SetBold();
+                worksheet.Cell(row, 2).Style.Font.SetFontSize(12).Font.SetBold();
                 worksheet.Cell(row, 2).Value = number;
                 row++;
             }

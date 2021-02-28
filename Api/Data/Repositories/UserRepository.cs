@@ -62,9 +62,12 @@ namespace Api.Data.Repositories
                     StartDate = l.StartDate,
                     LicenceName = l.LicenseName,
                     LicenceId = l.Id,
-                    UserId = l.UserId
+                    UserId = l.UserId,
+                    Year = l.Year
                 })
                 .AsNoTracking()
+                .OrderByDescending(l => l.Year)
+                .ThenBy(l => l.EndDate)
                 .ToListAsync();
         }
 
@@ -75,6 +78,7 @@ namespace Api.Data.Repositories
                 .Include(s => s.Licence)
                 .Where(s => s.User.Id == userId)
                 .AsNoTracking()
+                .OrderByDescending(l => l.Year)
                 .ToListAsync();
         
             var dtoList = new List<StatisticDto>();

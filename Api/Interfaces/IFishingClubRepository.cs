@@ -13,6 +13,7 @@ namespace Api.Interfaces
         public Task<List<StatisticDto>> GetStatisticsAsync();
         public Task<List<Right>> GetRightsAsync();
         public Task<List<InfringementDto>> GetInfringementsAsync();
+        public Task<FishingClubDto> InsertAsync(FishingClubDto fishingClubDto);
         public Task<FishingClubDto> UpdateAsync(FishingClubDto fishingClubDto);
         public Task<bool> Complete();
     }
